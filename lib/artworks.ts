@@ -20,3 +20,18 @@ export async function getArtworks(limit?: number) {
 
   return (data ?? []) as Artwork[];
 }
+
+export async function getArtworkWithNeighbors(id: string) {
+  const artworks = await getArtworks();
+  const currentIndex = artworks.findIndex((artwork) => artwork.id === id);
+
+  if (currentIndex === -1) {
+    return null;
+  }
+
+  return {
+    artwork: artworks[currentIndex],
+    previousArtwork: artworks[currentIndex - 1] ?? null,
+    nextArtwork: artworks[currentIndex + 1] ?? null,
+  };
+}

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   ChangeEvent,
+  ClipboardEvent,
   DragEvent,
   FormEvent,
   useEffect,
@@ -10,6 +11,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { siteUrl } from "@/lib/config";
 
 export function ArtworkUploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,6 +20,8 @@ export function ArtworkUploadForm() {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [lastArtworkUrl, setLastArtworkUrl] = useState("");
+  const [isClipboardLoading, setIsClipboardLoading] = useState(false);
 
   const previewUrl = useMemo(() => {
     if (!file) {
@@ -44,14 +48,93 @@ export function ArtworkUploadForm() {
     setMessage("");
   }
 
+  function extractImageFile(items: DataTransferItemList | null) {
+    if (!items) {
+      return null;
+    }
+
+    for (const item of Array.from(items)) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        return item.getAsFile();
+      }
+    }
+
+    return null;
+  }
+
   function onDrop(event: DragEvent<HTMLLabelElement>) {
     event.preventDefault();
     setIsDragging(false);
     handleFile(event.dataTransfer.files[0] ?? null);
   }
 
+  function onPaste(event: ClipboardEvent<HTMLFormElement>) {
+    const pastedFile = extractImageFile(event.clipboardData.items);
+
+    if (!pastedFile) {
+      return;
+    }
+
+    event.preventDefault();
+    handleFile(pastedFile);
+    setMessage("Image collée depuis le presse-papiers.");
+  }
+
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     handleFile(event.target.files?.[0] ?? null);
+  }
+
+  async function handleClipboardPaste() {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.read) {
+      setMessage("Le collage direct n'est pas disponible dans ce navigateur.");
+      return;
+    }
+
+    setIsClipboardLoading(true);
+    setMessage("");
+
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+
+      for (const clipboardItem of clipboardItems) {
+        const imageType = clipboardItem.types.find((type) => type.startsWith("image/"));
+
+        if (!imageType) {
+          continue;
+        }
+
+        const blob = await clipboardItem.getType(imageType);
+        const extension = imageType.split("/")[1] || "png";
+        const pastedFile = new File([blob], `presse-papiers.${extension}`, {
+          type: imageType,
+        });
+
+        handleFile(pastedFile);
+        setMessage("Image collée depuis le presse-papiers.");
+        setIsClipboardLoading(false);
+        return;
+      }
+
+      setMessage("Aucune image trouvée dans le presse-papiers.");
+    } catch {
+      setMessage("Impossible de lire le presse-papiers.");
+    }
+
+    setIsClipboardLoading(false);
+  }
+
+  async function handleCopyLink() {
+    if (!lastArtworkUrl || typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+      setMessage("Impossible de copier le lien.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(lastArtworkUrl);
+      setMessage("Lien de l'œuvre copié.");
+    } catch {
+      setMessage("Impossible de copier le lien.");
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -74,8 +157,11 @@ export function ArtworkUploadForm() {
       body: formData,
     });
 
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string; id?: string }
+      | null;
+
     if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
       setIsLoading(false);
       setMessage(payload?.error || "Impossible d'ajouter l'œuvre.");
       return;
@@ -88,12 +174,39 @@ export function ArtworkUploadForm() {
     setFile(null);
     setDescription("");
     setIsLoading(false);
-    setMessage("Œuvre ajoutée.");
+    setLastArtworkUrl(payload?.id ? `${siteUrl}/galerie/${payload.id}` : "");
+    setMessage(
+      payload?.id ? "Œuvre ajoutée. Le lien peut être copié." : "Œuvre ajoutée.",
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-line bg-white/90 p-6 shadow-soft md:p-8">
+    <form
+      onSubmit={handleSubmit}
+      onPaste={onPaste}
+      className="mx-auto flex w-full max-w-3xl flex-col gap-6 rounded-[2rem] border border-line bg-white/90 p-6 shadow-soft md:p-8"
+    >
       <h1 className="text-center text-3xl text-ink">Ajouter une peinture</h1>
+
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={handleClipboardPaste}
+          disabled={isClipboardLoading}
+          className="rounded-full border border-line bg-canvas px-5 py-3 text-sm text-ink shadow-soft disabled:cursor-wait disabled:opacity-60"
+        >
+          {isClipboardLoading ? "Lecture du presse-papiers..." : "Coller une image"}
+        </button>
+        {lastArtworkUrl ? (
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="rounded-full border border-line bg-canvas px-5 py-3 text-sm text-ink shadow-soft"
+          >
+            Copier le lien de la dernière œuvre
+          </button>
+        ) : null}
+      </div>
 
       <label
         onDragOver={(event) => {
@@ -118,7 +231,9 @@ export function ArtworkUploadForm() {
         ) : (
           <div className="space-y-3">
             <p className="text-xl text-ink">Glissez une image ici ou cliquez</p>
-            <p className="text-base text-black/60">JPG ou PNG, c'est parfait</p>
+            <p className="text-base text-black/60">
+              JPG, PNG ou image collée depuis le presse-papiers
+            </p>
           </div>
         )}
         <input
@@ -153,11 +268,20 @@ export function ArtworkUploadForm() {
       {message ? (
         <p
           className={`text-center text-base ${
-            message === "Œuvre ajoutée." ? "text-black/70" : "text-red-700"
+            message === "Œuvre ajoutée." ||
+            message === "Œuvre ajoutée. Le lien peut être copié." ||
+            message === "Image collée depuis le presse-papiers." ||
+            message === "Lien de l'œuvre copié."
+              ? "text-black/70"
+              : "text-red-700"
           }`}
         >
           {message}
         </p>
+      ) : null}
+
+      {lastArtworkUrl ? (
+        <p className="break-all text-center text-sm text-black/55">{lastArtworkUrl}</p>
       ) : null}
     </form>
   );

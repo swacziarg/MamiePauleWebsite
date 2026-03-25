@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { ArtworkCard } from "@/components/artwork-card";
 import type { Artwork } from "@/lib/types";
 
 type GalleryCarouselProps = {
@@ -72,23 +72,11 @@ export function GalleryCarousel({ artworks }: GalleryCarouselProps) {
             <div key={index} className="w-full flex-none">
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {pageItems.map((artwork) => (
-                  <article
+                  <ArtworkCard
                     key={artwork.id}
-                    className="overflow-hidden rounded-[2rem] border border-line bg-white/90 shadow-soft"
-                  >
-                    <div className="relative aspect-[4/5] bg-accent/40">
-                      <Image
-                        src={artwork.image_url}
-                        alt={artwork.description}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="px-6 py-5 md:px-7">
-                      <p className="text-lg leading-relaxed text-ink">{artwork.description}</p>
-                    </div>
-                  </article>
+                    artwork={artwork}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 ))}
               </div>
             </div>

@@ -76,10 +76,14 @@ export async function POST(request: Request) {
     .from("artworks")
     .getPublicUrl(filePath);
 
-  const { error: insertError } = await writeClient.from("artworks").insert({
-    image_url: publicUrlData.publicUrl,
-    description: trimmedDescription,
-  });
+  const { data: insertedArtwork, error: insertError } = await writeClient
+    .from("artworks")
+    .insert({
+      image_url: publicUrlData.publicUrl,
+      description: trimmedDescription,
+    })
+    .select("id")
+    .single();
 
   if (insertError) {
     await writeClient.storage.from("artworks").remove([filePath]);
@@ -89,5 +93,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, id: insertedArtwork.id });
 }

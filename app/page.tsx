@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ArtworkCard } from "@/components/artwork-card";
 import { ShareButton } from "@/components/share-button";
 import { SiteShell } from "@/components/site-shell";
 import { getArtworks } from "@/lib/artworks";
@@ -66,23 +66,11 @@ export default async function HomePage() {
           ) : (
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               {artworks.map((artwork) => (
-                <article
+                <ArtworkCard
                   key={artwork.id}
-                  className="overflow-hidden rounded-[2rem] border border-line bg-white/90 shadow-soft"
-                >
-                  <div className="relative aspect-[4/5] bg-accent/40">
-                    <Image
-                      src={artwork.image_url}
-                      alt={artwork.description}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="px-6 py-5 md:px-7">
-                    <p className="text-lg leading-relaxed text-ink">{artwork.description}</p>
-                  </div>
-                </article>
+                  artwork={artwork}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
               ))}
             </div>
           )}
