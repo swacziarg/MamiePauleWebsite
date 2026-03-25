@@ -1,24 +1,46 @@
 import { AdminAuth } from "@/components/admin-auth";
+import { AdminSignOut } from "@/components/admin-sign-out";
 import { ArtworkUploadForm } from "@/components/artwork-upload-form";
+import { isDevAdminBypassEnabled } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function AdminPage() {
+type AdminPageProps = {
+  searchParams?: Promise<{
+    erreur?: string;
+  }>;
+};
+
+export default async function AdminPage({ searchParams }: AdminPageProps) {
   const supabase = await createClient();
+  const params = await searchParams;
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (!user && !isDevAdminBypassEnabled) {
     return (
       <main className="flex min-h-screen items-center justify-center px-5 py-12">
-        <AdminAuth />
+        <div className="flex w-full flex-col items-center gap-4">
+          {params?.erreur ? (
+            <p className="rounded-full border border-red-200 bg-red-50 px-5 py-3 text-center text-base text-red-800">
+              {params.erreur}
+            </p>
+          ) : null}
+          <AdminAuth />
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5 py-12">
-      <ArtworkUploadForm userId={user.id} />
+    <main className="flex min-h-screen flex-col items-center justify-center gap-5 px-5 py-12">
+      <div className="flex w-full max-w-3xl items-center justify-between gap-4">
+        <p className="text-sm uppercase tracking-[0.3em] text-black/45">
+          {isDevAdminBypassEnabled && !user ? "Mode développement local" : "Espace d’administration"}
+        </p>
+        {user ? <AdminSignOut /> : null}
+      </div>
+      <ArtworkUploadForm />
     </main>
   );
 }

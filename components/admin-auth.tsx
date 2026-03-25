@@ -14,17 +14,17 @@ export function AdminAuth() {
     setMessage("");
 
     const supabase = createClient();
-    const origin = window.location.origin;
+    const baseUrl = window.location.origin;
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${origin}/auth/confirm`,
+        emailRedirectTo: `${baseUrl}/auth/confirm?next=/admin`,
       },
     });
 
     if (error) {
       setStatus("error");
-      setMessage("Impossible d'envoyer le lien.");
+      setMessage(error.message || "Impossible d'envoyer le lien.");
       return;
     }
 

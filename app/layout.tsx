@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mamie Paule",
-  description: "Galerie minimaliste des œuvres de Mamie Paule.",
+  title: "Paule Delmas",
+  description: "Galerie minimaliste des œuvres de Paule Delmas.",
 };
 
 export default function RootLayout({

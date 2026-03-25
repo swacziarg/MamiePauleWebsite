@@ -1,24 +1,23 @@
 import Image from "next/image";
 import { QrCodeCard } from "@/components/qr-code-card";
 import { ShareButton } from "@/components/share-button";
+import { siteUrl } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import type { Artwork } from "@/lib/types";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("artworks")
     .select("id, image_url, description, created_at")
     .order("created_at", { ascending: false });
 
-  const artworks = (data ?? []) as Artwork[];
+  const artworks = error ? [] : ((data ?? []) as Artwork[]);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 pb-20 pt-12 md:px-8 md:pt-16">
       <section className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
-        <p className="text-sm uppercase tracking-[0.35em] text-black/50">Mamie Paule</p>
+        <p className="text-sm uppercase tracking-[0.35em] text-black/50">Paule Delmas</p>
         <h1 className="text-5xl leading-tight text-ink md:text-6xl">Peintures</h1>
         <p className="max-w-2xl text-lg leading-relaxed text-black/70">
           Une galerie simple pour regarder les œuvres, sans distraction.

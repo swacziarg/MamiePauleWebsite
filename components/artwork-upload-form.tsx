@@ -10,13 +10,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { createClient } from "@/lib/supabase/client";
 
-type ArtworkUploadFormProps = {
-  userId: string;
-};
-
-export function ArtworkUploadForm({ userId }: ArtworkUploadFormProps) {
+export function ArtworkUploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
@@ -70,34 +65,19 @@ export function ArtworkUploadForm({ userId }: ArtworkUploadFormProps) {
     setIsLoading(true);
     setMessage("");
 
-    const supabase = createClient();
-    const fileExt = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const filePath = `${userId}/${Date.now()}.${fileExt}`;
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("description", description.trim());
 
-    const { error: uploadError } = await supabase.storage
-      .from("artworks")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) {
-      setIsLoading(false);
-      setMessage("Impossible d'envoyer l'image.");
-      return;
-    }
-
-    const { data: publicUrlData } = supabase.storage.from("artworks").getPublicUrl(filePath);
-
-    const { error: insertError } = await supabase.from("artworks").insert({
-      image_url: publicUrlData.publicUrl,
-      description: description.trim(),
+    const response = await fetch("/api/admin/upload", {
+      method: "POST",
+      body: formData,
     });
 
-    if (insertError) {
-      await supabase.storage.from("artworks").remove([filePath]);
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
       setIsLoading(false);
-      setMessage("Impossible d'enregistrer l'œuvre.");
+      setMessage(payload?.error || "Impossible d'enregistrer l'œuvre.");
       return;
     }
 
@@ -170,7 +150,15 @@ export function ArtworkUploadForm({ userId }: ArtworkUploadFormProps) {
         {isLoading ? "Chargement..." : "Publier"}
       </button>
 
-      {message ? <p className="text-center text-base text-black/70">{message}</p> : null}
+      {message ? (
+        <p
+          className={`text-center text-base ${
+            message === "Œuvre publiée." ? "text-black/70" : "text-red-700"
+          }`}
+        >
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }
