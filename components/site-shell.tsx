@@ -15,14 +15,14 @@ const navItems = [
 export function SiteShell({ children, currentPath }: SiteShellProps) {
   return (
     <div className="min-h-screen">
-      <header className="mx-auto w-full max-w-6xl px-5 pt-6 md:px-8 md:pt-8">
-        <div className="rounded-[2rem] border border-line bg-white/80 px-5 py-4 shadow-soft backdrop-blur md:px-7">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="mx-auto w-full max-w-6xl px-5 pt-4 md:px-8 md:pt-5">
+        <div className="rounded-[1.75rem] border border-line bg-white/80 px-5 py-3 shadow-soft backdrop-blur md:px-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <Link href="/" className="text-2xl text-ink">
+              <Link href="/" className="text-xl text-ink md:text-2xl">
                 Paule Delmas
               </Link>
-              <p className="mt-1 text-sm uppercase tracking-[0.28em] text-black/45">
+              <p className="mt-1 text-xs uppercase tracking-[0.28em] text-black/45">
                 Peintures
               </p>
             </div>
@@ -35,7 +35,7 @@ export function SiteShell({ children, currentPath }: SiteShellProps) {
                     key={item.href}
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
-                    className={`rounded-full px-4 py-2 text-sm ${
+                    className={`rounded-full px-4 py-2 text-xs md:text-sm ${
                       isActive
                         ? "bg-ink text-canvas"
                         : "border border-line bg-canvas/80 text-black/75 hover:border-ink hover:text-ink"
@@ -52,9 +52,9 @@ export function SiteShell({ children, currentPath }: SiteShellProps) {
 
       {children}
 
-      <footer className="mx-auto mt-20 w-full max-w-6xl px-5 pb-10 md:px-8">
-        <div className="flex flex-col gap-4 rounded-[2rem] border border-line bg-white/75 px-6 py-6 text-sm text-black/65 shadow-soft md:flex-row md:items-center md:justify-between">
-          <p>Les peintures de Paule Delmas, à voir en ligne et à partager facilement.</p>
+      <footer className="mx-auto mt-8 w-full max-w-6xl px-5 pb-6 md:px-8">
+        <div className="flex flex-col gap-3 rounded-[1.5rem] border border-line bg-white/75 px-5 py-4 text-sm text-black/65 shadow-soft md:flex-row md:items-center md:justify-between">
+          <p>Les peintures de Paule Delmas, à voir simplement.</p>
           <Link href="/admin" className="underline decoration-line underline-offset-4 hover:text-ink">
             Admin
           </Link>

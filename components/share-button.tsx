@@ -23,7 +23,7 @@ export function ShareButton({ url }: ShareButtonProps) {
     <button
       type="button"
       onClick={handleClick}
-      className="min-h-14 rounded-full border border-ink bg-ink px-8 text-lg text-canvas shadow-soft hover:-translate-y-0.5 hover:bg-black"
+      className="min-h-12 rounded-full border border-ink bg-ink px-6 text-base text-canvas shadow-soft hover:-translate-y-0.5 hover:bg-black"
     >
       {copied ? "Lien copié" : "Partager"}
     </button>
